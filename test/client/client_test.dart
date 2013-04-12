@@ -116,8 +116,17 @@ main() {
     var one = new RoutableOne();
     Router router = new Router(win: mockWindow)
       ..addRoutable(one);
+    
     router.route('foo/bar');
     expect(one.lastPath, equals('foo/bar'));
     expect(one.two.lastPath, equals('bar'));
+    
+    router.route('foo');
+    expect(one.lastPath, equals('foo'));
+    expect(one.two.lastPath, equals(''));
+    
+    router.route('foo/bar/aux');
+    expect(one.lastPath, equals('foo/bar/aux'));
+    expect(one.two.lastPath, equals('bar/aux'));
   });
 }
