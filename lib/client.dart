@@ -4,10 +4,10 @@
 
 library route.client;
 
+import 'dart:async';
 import 'dart:html';
 import 'package:logging/logging.dart';
 import 'url_pattern.dart';
-export 'url_pattern.dart';
 
 final _logger = new Logger('route');
 
@@ -16,13 +16,36 @@ typedef Handler(String path);
 typedef void EventHandler(Event e);
 
 /**
+ * Basic routable interface that web-components can implement to implement
+ * custom routing behavior.
+ */
+abstract class Routable {
+  void setRouter(Router router);
+  String getPath(String childPath);
+}
+
+class RouteEvent {
+  String path;
+  RouteEvent(this.path);
+}
+
+/**
  * Stores a set of [UrlPattern] to [Handler] associations and provides methods
  * for calling a handler for a URL path, listening to [Window] history events,
  * and creating HTML event handlers that navigate to a URL.
  */
 class Router {
-  final Map<UrlPattern, Handler> _handlers;
+  final List<Router> _childRouters;
+  final Router _parentRouter;
   final bool useFragment;
+  final Routable host;
+  final StreamController<RouteEvent> _onRouteController;
+  final StreamController<RouteEvent> _onLeaveController;
+  // TODO: these should be final!
+  Stream<RouteEvent> onRoute;
+  Stream<RouteEvent> onLeave;
+  bool _hostRouterSet = false;
+  dynamic win;
 
   /**
    * [useFragment] determines whether this Router uses pure paths with
@@ -30,19 +53,26 @@ class Router {
    * value is null which then determines the behavior based on
    * [History.supportsState].
    */
-  Router({bool useFragment})
-      : _handlers = new Map<UrlPattern, Handler>(),
+  Router({Router parentRouter, Routable host, bool useFragment, dynamic win})
+      : _childRouters = <Router>[],
+        _parentRouter = parentRouter,
+        host = (host == null) ? new PropagatingRoutable() : host,
         useFragment = (useFragment == null)
             ? !History.supportsState
-            : useFragment;
-
-  void addHandler(UrlPattern pattern, Handler handler) {
-    _handlers[pattern] = handler;
+            : useFragment,
+        _onRouteController = new StreamController<RouteEvent>.broadcast(),
+        _onLeaveController = new StreamController<RouteEvent>.broadcast(),
+        this.win = win == null ? window : win {
+    onRoute = _onRouteController.stream;
+    onLeave = _onLeaveController.stream;
   }
 
-  UrlPattern _getUrl(path) => _handlers.keys.firstWhere((url) => 
-      url.matches(path));
-  
+  void addRoutable(Routable routable) {
+    Router childRouter = new Router(parentRouter: this, host: routable,
+        useFragment: useFragment, win: win);
+    _childRouters.add(childRouter);
+  }
+
   /**
    * Finds a matching [UrlPattern] added with [addHandler], parses the path
    * and invokes the associated callback.
@@ -54,17 +84,123 @@ class Router {
    * If the UrlPattern contains a fragment (#), the handler is always called
    * with the path version of the URL by convertins the # to a /.
    */
-  void handle(String path) {
-    var url = _getUrl(path);
-    if (url != null) {
-      // always give handlers a non-fragment path
-      var fixedPath = url.reverse(url.parse(path));
-      _handlers[url](fixedPath);      
-    } else {
-      _logger.info("Unhandled path: $path");
+  void route(String path) {
+    _logger.finest('route $path');
+    if (!_hostRouterSet && host != null) {
+      host.setRouter(this);
+      _hostRouterSet = true;
     }
+    _onRouteController.add(new RouteEvent(path));
+  }
+  
+  /**
+   * Propagates the given path to all child routables.
+   */
+  void propagate(String path) {
+    _logger.finest('propagate $path');
+    _childRouters.forEach((r) {
+      r.route(path);
+    });
   }
 
+  void go(String newToken, {bool replace: false}) {
+    var p = _parentRouter;
+    var url = newToken;
+    while(p != null) {
+      url = p.host.getPath(url);
+      p = p._parentRouter;
+    }
+    _go(url, replace: replace);
+  }
+
+  void _go(String path, {String title, bool replace: false}) {
+    title = (title == null) ? '' : title;
+    if (useFragment) {
+      if (replace) {
+        win.location.replace('#' + path);
+      } else {
+        win.location.assign('#' + path);
+      }
+      (win.document as HtmlDocument).title = title;
+    } else {
+      if (replace) {
+        win.history.replaceState(null, title, path);
+      } else {
+        win.history.pushState(null, title, path);
+      }
+    }
+  }
+}
+
+/**
+ * Simple routable implementation that propagates routes to its children.
+ */
+class PropagatingRoutable implements Routable {
+  void setRouter(Router router) {
+    router.onRoute.listen((RouteEvent e) {
+      router.propagate(e.path);
+    }); 
+  }
+
+  String getPath(String childPath) {
+    return childPath;
+  }
+}
+
+class TemplateRoutable implements Routable {
+  final Element element;
+  
+  TemplateRoutable(Element this.element) {
+  }
+  
+  void setRouter(Router router) {
+    _compile(router, [element]);
+  }
+
+  String getPath(String childPath) {
+    return childPath;
+  }
+  
+  void _compile(Router router, List<Element> children) {
+    for (var child in children) {
+      if (_isRoutable(child)) {
+        router.addRoutable(_getRoutable(child));
+      } else {
+        _compile(router, child.children);
+      }
+    }
+  }
+  
+  Routable _getRoutable(Element element) {
+    if (element.xtag != null && element.xtag is Routable) {
+      return element.xtag;
+    }
+    return new TemplateRoutable(element);
+  }
+  
+  bool _isRoutable(Element element) {
+    return element.xtag != null && element.xtag is Routable || 
+        element.attributes.containsKey('routable');
+  }
+}
+
+class RouterUtils {
+  List<Routable> _routables;
+  final bool useFragment;
+  
+  /**
+   * [useFragment] determines whether this Router uses pure paths with
+   * [History.pushState] or paths + fragments and [Location.assign]. The default
+   * value is null which then determines the behavior based on
+   * [History.supportsState].
+   */
+  RouterUtils({bool useFragment})
+      : _routables = <Routable>[],
+        useFragment = (useFragment == null)
+            ? !History.supportsState
+            : useFragment;
+
+  
   /**
    * Listens for window history events and invokes the router. On older
    * browsers the hashChange event is used instead.
@@ -87,40 +223,6 @@ class Router {
           }
         }
       });
-    }
-  }
-
-  /**
-   * Navigates the browser to the path produced by [url] with [args] by calling
-   * [History.pushState], then invokes the handler associated with [url].
-   *
-   * On older browsers [Location.assign] is used instead with the fragment
-   * version of the UrlPattern.
-   */
-  void gotoUrl(UrlPattern url, List args, String title) {
-    if (_handlers.containsKey(url)) {
-      _go(url.reverse(args, useFragment: useFragment), title);
-      _handlers[url](url.reverse(args, useFragment: useFragment));
-    } else {
-      throw new ArgumentError('Unknown URL pattern: $url');
-    }
-  }
-  
-  void gotoPath(String path, String title) {
-    var url = _getUrl(path);
-    if (url != null) {
-      _go(path, title);
-      _handlers[url](path);
-    }
-  }
-
-  void _go(String path, String title) {
-    title = (title == null) ? '' : title;
-    if (useFragment) {
-      window.location.assign(path);
-      (window.document as HtmlDocument).title = title;
-    } else {
-      window.history.pushState(null, title, path);
     }
   }
   

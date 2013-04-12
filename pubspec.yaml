@@ -10,6 +10,7 @@ dependencies:
 
 dev_dependencies:
   unittest: any
+  js: any
 
 environment:
   sdk: ">=0.4.2+0.r20193"

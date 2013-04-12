@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>basic</title>
+    <style>
+    </style>
+  </head>
+ 
+  <body>   
+    <h1>by hand routing example</h1>
+
+    <a href="#a">a</a>
+    <a href="#a/b1">a/b1</a>
+    <a href="#a/b2">a/b2</a>
+    <a href="#a/b1/c1">a/b1/c1</a>
+    <a href="#a/b1/c2">a/b1/c2</a>
+    <a href="#a/b2/c3">a/b2/c3</a>
+    <a href="#a/b2/c4">a/b2/c4</a>
+
+    <div id="section-a" style="display: none;">
+      <h1>a</h1>
+      <div id="section-b1" style="display: none;">
+        <h1>b1</h1>
+        <button id="go-b2">go b2</button>
+        <div id="section-c1" style="display: none;">
+          <h1>c1</h1>
+        </div>
+        <div id="section-c2" style="display: none;">
+          <h1>c2</h1>
+        </div>
+      </div>
+      <div id="section-b2" style="display: none;">
+        <h1>b2</h1>
+        <div id="section-c3" style="display: none;">
+          <h1>c3</h1>
+        </div>
+        <div id="section-c4" style="display: none;">
+          <h1>c4</h1>
+        </div>
+      </div>
+    </div>
+    <script type="application/dart" src="byhand.dart"></script>
+    <script src="packages/browser/dart.js"></script>
+  </body>
+</html>
