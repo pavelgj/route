@@ -1,6 +1,7 @@
 library example;
 
 import 'dart:html';
+import 'package:route/url_pattern.dart';
 import 'package:route/client.dart';
 
 final one = new UrlPattern('/one');

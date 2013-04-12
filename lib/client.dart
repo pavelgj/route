@@ -13,8 +13,6 @@ final _logger = new Logger('route');
 
 typedef Handler(String path);
 
-typedef void EventHandler(Event e);
-
 /**
  * Basic routable interface that web-components can implement to implement
  * custom routing behavior.
@@ -35,6 +33,7 @@ class RouteEvent {
  * and creating HTML event handlers that navigate to a URL.
  */
 class Router {
+  final Map<UrlPattern, Handler> _handlers;
   final List<Router> _childRouters;
   final Router _parentRouter;
   final bool useFragment;
@@ -55,6 +54,7 @@ class Router {
    */
   Router({Router parentRouter, Routable host, bool useFragment, dynamic win})
       : _childRouters = <Router>[],
+        _handlers = new Map<UrlPattern, Handler>(),
         _parentRouter = parentRouter,
         host = (host == null) ? new PropagatingRoutable() : host,
         useFragment = (useFragment == null)
@@ -67,6 +67,13 @@ class Router {
     onLeave = _onLeaveController.stream;
   }
 
+  void addHandler(UrlPattern pattern, Handler handler) {
+    _handlers[pattern] = handler;
+  }
+  
+  UrlPattern _getUrl(path) => _handlers.keys.firstWhere((url) => 
+      url.matches(path));
+        
   void addRoutable(Routable routable) {
     Router childRouter = new Router(parentRouter: this, host: routable,
         useFragment: useFragment, win: win);
@@ -84,8 +91,18 @@ class Router {
    * If the UrlPattern contains a fragment (#), the handler is always called
    * with the path version of the URL by convertins the # to a /.
    */
+  void _handle(String path) {
+    var url = _getUrl(path);
+    if (url != null) {
+      // always give handlers a non-fragment path
+      var fixedPath = url.reverse(url.parse(path));
+      _handlers[url](fixedPath);
+    }
+  }
+      
   void route(String path) {
     _logger.finest('route $path');
+    _handle(path);
     if (!_hostRouterSet && host != null) {
       host.setRouter(this);
       _hostRouterSet = true;
@@ -129,6 +146,39 @@ class Router {
         win.history.pushState(null, title, path);
       }
     }
+  }
+  
+  /**
+   * Listens for window history events and invokes the router. On older
+   * browsers the hashChange event is used instead.
+   */
+  void listen({bool ignoreClick: false}) {
+    if (_parentRouter != null) {
+      throw new StateError('Can only listen on root router.');
+    }
+    if (useFragment) {
+      window.onHashChange.listen((_) =>
+          route('${window.location.hash}'));
+    } else {
+      window.onPopState.listen((_) => route(window.location.pathname));
+    }
+    if (!ignoreClick) {
+      window.onClick.listen((e) {
+        if (e.target is AnchorElement) {
+          AnchorElement anchor = e.target;
+          if (anchor.host == window.location.host) {
+            var fragment = (anchor.hash == '') ? '' : '#${anchor.hash}'; 
+            _gotoPath("${anchor.pathname}$fragment", anchor.title);
+            e.preventDefault();
+          }
+        }
+      });
+    }
+  }
+
+  void _gotoPath(String path, String title) {
+    _go(path, title: title);
+    route(path);
   }
 }
 
@@ -182,60 +232,4 @@ class TemplateRoutable implements Routable {
     return element.xtag != null && element.xtag is Routable || 
         element.attributes.containsKey('routable');
   }
-}
-
-class RouterUtils {
-  List<Routable> _routables;
-  final bool useFragment;
-  
-  /**
-   * [useFragment] determines whether this Router uses pure paths with
-   * [History.pushState] or paths + fragments and [Location.assign]. The default
-   * value is null which then determines the behavior based on
-   * [History.supportsState].
-   */
-  RouterUtils({bool useFragment})
-      : _routables = <Routable>[],
-        useFragment = (useFragment == null)
-            ? !History.supportsState
-            : useFragment;
-
-  
-  /**
-   * Listens for window history events and invokes the router. On older
-   * browsers the hashChange event is used instead.
-   */
-  void listen({bool ignoreClick: false}) {
-    if (useFragment) {
-      window.onHashChange.listen((_) =>
-          handle('${window.location.pathname}#${window.location.hash}'));
-    } else {
-      window.onPopState.listen((_) => handle(window.location.pathname));
-    }
-    if (!ignoreClick) {
-      window.onClick.listen((e) {
-        if (e.target is AnchorElement) {
-          AnchorElement anchor = e.target;
-          if (anchor.host == window.location.host) {
-            var fragment = (anchor.hash == '') ? '' : '#${anchor.hash}'; 
-            gotoPath("${anchor.pathname}$fragment", anchor.title);
-            e.preventDefault();
-          }
-        }
-      });
-    }
-  }
-  
-  /**
-   * Returns an [Event] handler suitable for use as a click handler on [:<a>;]
-   * elements. The handler reverses [ur] with [args] and uses [window.pushState]
-   * with [title] to change the user visible URL without navigating to it.
-   * [Event.preventDefault] is called to stop the default behavior. Then the
-   * handler associated with [url] is invoked with [args].
-   */
-  EventHandler clickHandler(UrlPattern url, List args, String title) =>
-      (Event e) {
-        e.preventDefault();
-        gotoUrl(url, args, title);
-      };
 }
