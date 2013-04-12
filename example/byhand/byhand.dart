@@ -81,7 +81,7 @@ void _routeHelper(String token, List<String> tokens, Router router, RouteEvent e
 }
 
 main() {
-  _logger.level = Level.FINE;
+  _logger.level = Level.FINEST;
   _logger.onRecord.listen((LogRecord lr) {
     print('[' + lr.level.name + '] ' +  lr.message);
   });

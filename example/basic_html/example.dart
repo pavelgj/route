@@ -3,11 +3,19 @@ library example;
 import 'dart:html';
 import 'package:route/url_pattern.dart';
 import 'package:route/client.dart';
+import 'package:logging/logging.dart';
+
+final _logger = new Logger('');
 
 final one = new UrlPattern('/one');
 final two = new UrlPattern('/two');
 
 main() {
+  _logger.level = Level.FINEST;
+  _logger.onRecord.listen((LogRecord lr) {
+    print('[' + lr.level.name + '] ' +  lr.message);
+  });
+
   query('#warning').remove();
   query('#one').classes.add('selected');
   

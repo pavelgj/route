@@ -72,7 +72,7 @@ class Router {
   }
   
   UrlPattern _getUrl(path) => _handlers.keys.firstWhere((url) => 
-      url.matches(path));
+      url.matches(path), orElse: () => null);
         
   void addRoutable(Routable routable) {
     Router childRouter = new Router(parentRouter: this, host: routable,
@@ -153,12 +153,13 @@ class Router {
    * browsers the hashChange event is used instead.
    */
   void listen({bool ignoreClick: false}) {
+    _logger.finest('listen $ignoreClick');
     if (_parentRouter != null) {
       throw new StateError('Can only listen on root router.');
     }
     if (useFragment) {
       window.onHashChange.listen((_) =>
-          route('${window.location.hash}'));
+          route('${window.location.pathname}#${window.location.hash}'));;
     } else {
       window.onPopState.listen((_) => route(window.location.pathname));
     }
@@ -168,17 +169,13 @@ class Router {
           AnchorElement anchor = e.target;
           if (anchor.host == window.location.host) {
             var fragment = (anchor.hash == '') ? '' : '#${anchor.hash}'; 
-            _gotoPath("${anchor.pathname}$fragment", anchor.title);
             e.preventDefault();
+            _go("${anchor.pathname}$fragment", title: anchor.title);
+            route("${anchor.pathname}$fragment");
           }
         }
       });
     }
-  }
-
-  void _gotoPath(String path, String title) {
-    _go(path, title: title);
-    route(path);
   }
 }
 

@@ -6,6 +6,7 @@ library route.client_test;
 
 import 'package:unittest/unittest.dart';
 import 'package:route/client.dart';
+import 'package:route/url_pattern.dart';
 import 'mocks.dart';
 
 class RoutableOne implements Routable {
@@ -52,6 +53,39 @@ class RoutableTwo implements Routable {
 }
 
 main() {
+  test('handle', () {
+    var router = new Router();
+    var url1 = new UrlPattern(r'/');
+    var url2 = new UrlPattern(r'/foo/(\d+)');
+    var testPath = '/foo/123';
+
+    router.addHandler(url1, (String path) {
+      fail('should not have been called');
+    });
+
+    router.addHandler(url2, (String path) {
+      expect(path, testPath);
+    });
+
+    router.route(testPath);
+  });
+
+  test('fragment', () {
+    var router = new Router(useFragment: true);
+    var url2 = new UrlPattern(r'/foo#(\d+)');
+
+    var testPath = '/foo/123';
+    var testPathFragment = '/foo#123';
+
+    router.addHandler(url2, (String path) {
+      // always expect the non-fragment path
+      expect(path, testPath);
+    });
+
+    router.route(testPath);
+    router.route(testPathFragment);
+  });
+
   test('route event occurs', () {
     var one = new RoutableOne();
     Router router = new Router()
