@@ -120,6 +120,9 @@ class Router {
     });
   }
 
+  /**
+   * TODO: doc
+   */
   void go(String newToken, {bool replace: false}) {
     var p = _parentRouter;
     var url = newToken;
@@ -128,9 +131,22 @@ class Router {
       p = p._parentRouter;
     }
     _go(url, replace: replace);
+    _rootRouter.route(url);
   }
 
+  Router get _rootRouter {
+    var p = _parentRouter;
+    while(p != null) {
+      if (p._parentRouter == null) {
+        return p;
+      }
+      p = p._parentRouter;
+    }
+    return null;
+  }
+  
   void _go(String path, {String title, bool replace: false}) {
+    _logger.finest('_go $path');
     title = (title == null) ? '' : title;
     if (useFragment) {
       if (replace) {
@@ -153,25 +169,29 @@ class Router {
    * browsers the hashChange event is used instead.
    */
   void listen({bool ignoreClick: false}) {
-    _logger.finest('listen $ignoreClick');
     if (_parentRouter != null) {
       throw new StateError('Can only listen on root router.');
     }
-    if (useFragment) {
-      window.onHashChange.listen((_) =>
-          route('${window.location.pathname}#${window.location.hash}'));;
-    } else {
-      window.onPopState.listen((_) => route(window.location.pathname));
-    }
+    window.onPopState.listen((_) {
+      if (useFragment) {
+        var hash = window.location.hash;
+        route(hash.startsWith('#') ? hash.substring(1) : hash);
+      } else {
+        route(window.location.pathname);
+      }
+    });
     if (!ignoreClick) {
       window.onClick.listen((e) {
         if (e.target is AnchorElement) {
           AnchorElement anchor = e.target;
           if (anchor.host == window.location.host) {
-            var fragment = (anchor.hash == '') ? '' : '#${anchor.hash}'; 
             e.preventDefault();
-            _go("${anchor.pathname}$fragment", title: anchor.title);
-            route("${anchor.pathname}$fragment");
+            var href = anchor.attributes['href'];
+            if (useFragment && href.startsWith('#')) {
+              href = href.substring(1);
+            }
+            _go(href, title: anchor.title);
+            route(href);
           }
         }
       });

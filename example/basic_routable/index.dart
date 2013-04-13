@@ -1,4 +1,4 @@
-library byhandexample;
+library basic_routable;
 
 import 'dart:html';
 import 'package:route/client.dart';
@@ -13,14 +13,14 @@ class RoutableOne implements Routable {
     router.addRoutable(new RoutableTwo());
     router.onRoute.listen((RouteEvent e) {
       var tokens = e.path.split('/');
-      lastToken = tokens.length > 0 ? tokens[0] : null;
+      lastToken = tokens.length > 1 ? tokens[1] : null;
       
-      _routeHelper(lastToken, tokens, router, e, 'a');
+      _routeHelper(lastToken, tokens.sublist(1), router, e, 'a');
     });
   }
   
   String getPath(String childPath) {
-    return "$lastToken/$childPath";
+    return "/$lastToken/$childPath";
   }
 }
 
@@ -71,7 +71,12 @@ class RoutableThree implements Routable {
   }
 }
 
-void _routeHelper(String token, List<String> tokens, Router router, RouteEvent e, String match) {
+/**
+ * A helper method that changes visiblity for [match] depending on the token
+ * value. It also propagates the "tail" the token to child routables.
+ */
+void _routeHelper(String token, List<String> tokens, Router router,
+                  RouteEvent e, String match) {
   query('#section-' + match).style.display = (token == match) ? "block" : "none";
   if (tokens.length > 0) {
     router.propagate(tokens.sublist(1).join('/'));
@@ -86,13 +91,7 @@ main() {
     print('[' + lr.level.name + '] ' +  lr.message);
   });
   
-  Router router = new Router(useFragment: true)
-    ..addRoutable(new RoutableOne());
-
-  window.onPopState.listen((_) {
-    var hash = window.location.hash;
-    if (hash != null && hash.startsWith('#')) {
-      router.route(hash.substring(1));
-    }
-  });
+  Router router = new Router(useFragment: false)
+    ..addRoutable(new RoutableOne())
+    ..listen();
 }
