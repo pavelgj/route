@@ -12,32 +12,6 @@ import 'package:route/client.dart';
 import 'package:route/template.dart';
 import 'mocks.dart';
 
-Element findElementById(Element root, String id) {
-  return findElement(root, (Element e) {
-    return e.attributes.containsKey('id') && e.attributes['id'] == id;
-  });
-}
-
-Element findElement(Element e, Function check) {
-  if (check(e)) {
-    return e;
-  }
-  Element found = null;
-  e.children.forEach((ee){
-    if (found == null) {
-      found = findElement(ee, check);
-    }
-  });
-  return found;
-}
-
-Element div([Map attributes, List children]) {
-  Element e = new MockElement();
-  e.attributes = attributes != null ? attributes : {};
-  e.children = children != null ? children : [];
-  return e;
-}
-
 main() {
   test('basic template', () {
     Element root = div({'routable': ''}, [
@@ -152,4 +126,30 @@ main() {
     expect(a2b4.style.display, equals(''));
     expect(a2c.style.display, equals('none'));
   });
+}
+
+Element findElementById(Element root, String id) {
+  return findElement(root, (Element e) {
+    return e.attributes.containsKey('id') && e.attributes['id'] == id;
+  });
+}
+
+Element findElement(Element e, Function check) {
+  if (check(e)) {
+    return e;
+  }
+  Element found = null;
+  e.children.forEach((ee){
+    if (found == null) {
+      found = findElement(ee, check);
+    }
+  });
+  return found;
+}
+
+Element div([Map attributes, List children]) {
+  Element e = new MockElement();
+  e.attributes = attributes != null ? attributes : {};
+  e.children = children != null ? children : [];
+  return e;
 }
