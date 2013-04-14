@@ -5,6 +5,7 @@
 library route.client_test;
 
 import 'package:unittest/unittest.dart';
+import 'package:unittest/mock.dart';
 import 'package:route/client.dart';
 import 'package:route/url_pattern.dart';
 import 'mocks.dart';
@@ -116,15 +117,17 @@ main() {
       ..addRoutable(one);
     router.route('foo');
     
+    var mockLocation = mockWindow.location;
+
     one._router.go('bar');
-    expect(mockWindow.location.assignCalls.length, equals(1));
-    expect(mockWindow.location.assignCalls[0], '#bar');
-    expect(mockWindow.location.replaceCalls.length, equals(0));
+    mockLocation.getLogs(callsTo('assign', anything)).verify(happenedExactly(1));
+    expect(mockLocation.getLogs(callsTo('assign', anything)).last.args, ['#bar']);
+    mockLocation.getLogs(callsTo('replace', anything)).verify(happenedExactly(0));
     
-    one._router.go('bar', replace: true);
-    expect(mockWindow.location.replaceCalls.length, equals(1));
-    expect(mockWindow.location.replaceCalls[0], '#bar');
-    expect(mockWindow.location.assignCalls.length, equals(1));
+    one._router.go('aux', replace: true);
+    mockLocation.getLogs(callsTo('replace', anything)).verify(happenedExactly(1));
+    expect(mockLocation.getLogs(callsTo('replace', anything)).last.args, ['#aux']);
+    mockLocation.getLogs(callsTo('assign', anything)).verify(happenedExactly(1));
   });
 
   test('useFragment:false go does history.pushState/replaceState', () {
@@ -134,15 +137,17 @@ main() {
       ..addRoutable(one);
     router.route('foo');
     
+    var mockHistory = mockWindow.history;
+    
     one._router.go('bar');
-    expect(mockWindow.history.pushStateCalls.length, equals(1));
-    expect(mockWindow.history.pushStateCalls[0], [null, '', 'bar']);
-    expect(mockWindow.history.replaceStateCalls.length, equals(0));
+    mockHistory.getLogs(callsTo('pushState', anything)).verify(happenedExactly(1));
+    expect(mockHistory.getLogs(callsTo('pushState', anything)).last.args, [null, '', 'bar']);
+    mockHistory.getLogs(callsTo('replaceState', anything)).verify(happenedExactly(0));
     
     one._router.go('aux', replace: true);
-    expect(mockWindow.history.replaceStateCalls.length, equals(1));
-    expect(mockWindow.history.replaceStateCalls[0], [null, '', 'aux']);
-    expect(mockWindow.history.pushStateCalls.length, equals(1));
+    mockHistory.getLogs(callsTo('replaceState', anything)).verify(happenedExactly(1));
+    expect(mockHistory.getLogs(callsTo('replaceState', anything)).last.args, [null, '', 'aux']);
+    mockHistory.getLogs(callsTo('pushState', anything)).verify(happenedExactly(1));
   });
 
   test('one should propagate route', () {

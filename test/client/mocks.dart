@@ -5,45 +5,21 @@
 library test_mocks;
 
 import 'dart:html';
+import 'package:unittest/mock.dart';
 
-class MockWindow {
-  MockDocument document = new MockDocument();
-  MockHistory history = new MockHistory();
-  MockLocation location = new MockLocation();
-}
-
-class MockDocument implements HtmlDocument {
-  List titleSetCalls = [];
-  List titleGetCalls = [];
-  String _title;
-  String set title(title) {
-    _title = title;
-    titleSetCalls.add(title);
-  }
-  String get title {
-    titleGetCalls.add(title);
-    return _title;
+class MockWindow extends Mock implements Window {
+  MockWindow() {
+    this.when(callsTo('get history')).alwaysReturn(new MockHistory());
+    this.when(callsTo('get location')).alwaysReturn(new MockLocation());
+    this.when(callsTo('get document')).alwaysReturn(new MockDocument());
   }
 }
 
-class MockHistory {
-  List replaceStateCalls = [];
-  List pushStateCalls = [];
-  void replaceState(Object data, String title, String url) {
-    replaceStateCalls.add([data, title, url]);
-  }
-  void pushState(Object data, String title, String url) {
-    pushStateCalls.add([data, title, url]);
-  }
+class MockDocument extends Mock implements HtmlDocument {
 }
 
-class MockLocation {
-  List replaceCalls = [];
-  List assignCalls = [];
-  void replace(String url) {
-    replaceCalls.add(url);
-  }
-  void assign(String url) {
-    assignCalls.add(url);
-  }
+class MockHistory extends Mock implements History {
+}
+
+class MockLocation extends Mock implements Location {
 }
