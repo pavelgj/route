@@ -31,7 +31,7 @@ Element findElement(Element e, Function check) {
   return found;
 }
 
-Element div({Map attributes, List children}) {
+Element div([Map attributes, List children]) {
   Element e = new MockElement();
   e.attributes = attributes != null ? attributes : {};
   e.children = children != null ? children : [];
@@ -40,20 +40,20 @@ Element div({Map attributes, List children}) {
 
 main() {
   test('basic template', () {
-    Element root = div(attributes: {'routable': ''}, children: [
-      div(attributes: {'route': 'a1', 'id': 'a1'}, children: [
-        div(attributes: {'routable': ''}, children: [
-          div(attributes: {'route': 'b1', 'id': 'a1-b1'}),
-          div(attributes: {'route': 'b2', 'id': 'a1-b2'}),
-          div(attributes: {'default-route': 'c', 'id': 'a1-c'}),
+    Element root = div({'routable': ''}, [
+      div({'route': 'a1', 'id': 'a1'}, [
+        div({'routable': ''}, [
+          div({'route': 'b1', 'id': 'a1-b1'}),
+          div({'route': 'b2', 'id': 'a1-b2'}),
+          div({'default-route': 'c', 'id': 'a1-c'}),
         ])
       ]),
-      div(attributes: {'route': 'a2', 'id': 'a2'}, children: [
-        div(attributes: {'routable': ''}, children: [
-          div(attributes: {'route': 'b2', 'id': 'a2-b2'}),
-          div(attributes: {'route': 'b3', 'id': 'a2-b3'}),
-          div(attributes: {'route': 'b4', 'id': 'a2-b4'}),
-          div(attributes: {'default-route': 'c', 'id': 'a2-c'}),
+      div({'route': 'a2', 'id': 'a2'}, [
+        div({'routable': ''}, [
+          div({'route': 'b2', 'id': 'a2-b2'}),
+          div({'route': 'b3', 'id': 'a2-b3'}),
+          div({'route': 'b4', 'id': 'a2-b4'}),
+          div({'default-route': 'c', 'id': 'a2-c'}),
         ])
       ])
     ]);
