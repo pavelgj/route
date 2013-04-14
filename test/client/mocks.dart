@@ -8,18 +8,31 @@ import 'dart:html';
 import 'package:unittest/mock.dart';
 
 class MockWindow extends Mock implements Window {
-  MockWindow() {
-    this.when(callsTo('get history')).alwaysReturn(new MockHistory());
-    this.when(callsTo('get location')).alwaysReturn(new MockLocation());
-    this.when(callsTo('get document')).alwaysReturn(new MockDocument());
+  History history = new MockHistory();
+  Location location = new MockLocation();
+  Document document = new MockDocument();
+}
+
+class MockDocument extends Mock implements HtmlDocument {}
+
+class MockHistory extends Mock implements History {}
+
+class MockLocation extends Mock implements Location {}
+
+class MockElement extends Mock implements Element {
+  Map<String, String> attributes = {};
+  List<Element> children = [];
+  MockStyle style = new MockStyle();
+}
+
+class MockStyle {
+  Map<String, String> styles = {};
+  dynamic noSuchMethod(InvocationMirror im) {
+    if (im.isSetter) {
+      styles[im.memberName.substring(0, im.memberName.length - 1)] = im.positionalArguments[0];
+    }
+    if (im.isGetter) {
+      return styles[im.memberName];
+    }
   }
-}
-
-class MockDocument extends Mock implements HtmlDocument {
-}
-
-class MockHistory extends Mock implements History {
-}
-
-class MockLocation extends Mock implements Location {
 }

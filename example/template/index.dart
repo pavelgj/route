@@ -2,6 +2,7 @@ library template_example;
 
 import 'dart:html';
 import 'package:route/client.dart';
+import 'package:route/template.dart';
 import 'package:logging/logging.dart';
 
 final _logger = new Logger('');
