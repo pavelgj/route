@@ -29,7 +29,8 @@ class MockStyle {
   Map<String, String> styles = {};
   dynamic noSuchMethod(InvocationMirror im) {
     if (im.isSetter) {
-      styles[im.memberName.substring(0, im.memberName.length - 1)] = im.positionalArguments[0];
+      var name = im.memberName.substring(0, im.memberName.length - 1);
+      styles[name] = im.positionalArguments[0];
     }
     if (im.isGetter) {
       return styles[im.memberName];
