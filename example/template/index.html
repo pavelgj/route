@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>routable template example</title>
+    <style>
+    </style>
+  </head>
+ 
+  <body>   
+    <h1>routable template example</h1>
+
+    <a href="#a">/a</a>
+    <a href="#a/b1">/a/b1</a>
+    <a href="#a/b2">/a/b2</a>
+    <a href="#a/b1/c1">/a/b1/c1</a>
+    <a href="#a/b1/c2">/a/b1/c2</a>
+    <a href="#a/b2/c1">/a/b2/c1</a>
+    <a href="#a/b2/c2">/a/b2/c2</a>
+
+    <div routable id="root">
+      <div route="a">
+        <h1>a</h1>
+        <div routable>
+          <div route="b1">
+            <h1>b1</h1>
+            <div routable>
+              <div route="c1">
+                <h1>c1</h1>
+              </div>
+              <div route="c2">
+                <h1>c2</h1>
+              </div>
+            </div>
+          </div>
+          <div route="b2">
+             <h1>b2</h1>
+             <div routable>
+               <div route="c1">
+                 <h1>c1</h1>
+               </div>
+               <div route="c2">
+                 <h1>c1</h1>
+               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="application/dart" src="index.dart"></script>
+    <script src="packages/browser/dart.js"></script>
+  </body>
+</html>

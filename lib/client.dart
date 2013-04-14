@@ -216,25 +216,46 @@ class PropagatingRoutable implements Routable {
 
 class TemplateRoutable implements Routable {
   final Element element;
+  final Map<String, Element> routes = {};
   
-  TemplateRoutable(Element this.element) {
-  }
+  TemplateRoutable(Element this.element);
   
   void setRouter(Router router) {
-    _compile(router, [element]);
+    _compile(router, [element], true);
+    router.onRoute.listen((RouteEvent e) {
+      var tokens = e.path.split('/');
+      var token = tokens[0];
+      // TODO(pavelgj): do something smarter here.
+      routes.keys.forEach((key){
+        routes[key].style.display = 'none';
+      });
+      if (routes.containsKey(token)) {
+        routes[token].style.display = '';
+      }
+      if (tokens.length > 0) {
+        router.propagate(tokens.sublist(1).join('/'));
+      } else {
+        router.propagate('');
+      }
+    });
   }
 
   String getPath(String childPath) {
     return childPath;
   }
   
-  void _compile(Router router, List<Element> children) {
+  void _compile(Router router, List<Element> children, bool skipRoutable) {
     for (var child in children) {
-      if (_isRoutable(child)) {
+      if (!skipRoutable && _isRoutable(child)) {
         router.addRoutable(_getRoutable(child));
-      } else {
-        _compile(router, child.children);
+        continue;
       }
+      if (_isRoute(child)) {
+        _logger.finest('found route ${child.attributes['route']}');
+        routes[child.attributes['route']] = child;
+        child.style.display = 'none';
+      }
+      _compile(router, child.children, false);
     }
   }
   
@@ -248,5 +269,9 @@ class TemplateRoutable implements Routable {
   bool _isRoutable(Element element) {
     return element.xtag != null && element.xtag is Routable || 
         element.attributes.containsKey('routable');
+  }
+  
+  bool _isRoute(Element element) {
+    return element.attributes.containsKey('route');
   }
 }
