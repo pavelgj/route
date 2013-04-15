@@ -73,7 +73,7 @@ class TemplateRoutable implements Routable {
         var p = child.parent;
         var route;
         while (p!= null && p != root) {
-          if (_isRoute(p) || _isDefaultRoute(child)) {
+          if (_isRoute(p) || _isDefaultRoute(p)) {
             if (!routeRouters.containsKey(_getRoute(p))) {
               routeRouters[_getRoute(p)] = [];
             }

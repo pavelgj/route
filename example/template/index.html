@@ -12,15 +12,17 @@
 
     <a href="#">/</a>
     <a href="#a">/a</a>
+    <a href="#garbage">/garbage</a>
     <a href="#a/b1">/a/b1</a>
     <a href="#a/b2">/a/b2</a>
+    <a href="#a/garbage">/a/garbage</a>
     <a href="#a/b1/c1">/a/b1/c1</a>
     <a href="#a/b1/c2">/a/b1/c2</a>
     <a href="#a/b2/c1">/a/b2/c1</a>
     <a href="#a/b2/c2">/a/b2/c2</a>
 
     <div routable id="root">
-      <div route="a">
+      <div default-route="a">
         <h1>a</h1>
         <div routable>
           <div route="b1">
@@ -49,9 +51,6 @@
             <h1>default route for b</h1>
           </div>
         </div>
-      </div>
-      <div default-route="a-default">
-        <h1>default route for a</h1>
       </div>
     </div>
 
