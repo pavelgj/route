@@ -29,11 +29,13 @@ main() {
           div({'route': 'b4', 'id': 'a2-b4'}),
           div({'default-route': 'c', 'id': 'a2-c'}),
         ])
-      ])
+      ]),
+      div({'default-route': 'a3', 'id': 'a3'})
     ]);
     
     var a1 = findElementById(root, 'a1');
     var a2 = findElementById(root, 'a2');
+    var a3 = findElementById(root, 'a3');
     var a1b1 = findElementById(root, 'a1-b1');
     var a1b2 = findElementById(root, 'a1-b2');
     var a1c = findElementById(root, 'a1-c');
@@ -55,77 +57,89 @@ main() {
 
     router.route('a1/b1');
 
-    expect(a1.style.display, equals(''));
-    expect(a2.style.display, equals('none'));
-    expect(a1b1.style.display, equals(''));
-    expect(a1b2.style.display, equals('none'));
-    expect(a1c.style.display, equals('none'));
-    expect(a2b2.style.display, equals('none'));
-    expect(a2b3.style.display, equals('none'));
-    expect(a2b4.style.display, equals('none'));
-    expect(a2c.style.display, equals('')); // fix?
+    expectVisible(a1);
+    expectHidden(a2);
+    expectHidden(a3);
+    expectVisible(a1b1);
+    expectHidden(a1b2);
+    expectHidden(a1c);
+    expectHidden(a2b2);
+    expectHidden(a2b3);
+    expectHidden(a2b4);
+    expectHidden(a2c);
 
     router.route('a1/b2');
 
-    expect(a1.style.display, equals(''));
-    expect(a2.style.display, equals('none'));
-    expect(a1b1.style.display, equals('none'));
-    expect(a1b2.style.display, equals(''));
-    expect(a1c.style.display, equals('none'));
-    expect(a2b2.style.display, equals('')); // fix?
-    expect(a2b3.style.display, equals('none'));
-    expect(a2b4.style.display, equals('none'));
-    expect(a2c.style.display, equals('none'));
+    expectVisible(a1);
+    expectHidden(a2);
+    expectHidden(a3);
+    expectHidden(a1b1);
+    expectVisible(a1b2);
+    expectHidden(a1c);
+    expectHidden(a2b2);
+    expectHidden(a2b3);
+    expectHidden(a2b4);
+    expectHidden(a2c);
 
     router.route('a2/b1');
 
-    expect(a1.style.display, equals('none'));
-    expect(a2.style.display, equals(''));
-    expect(a1b1.style.display, equals('')); // fix?
-    expect(a1b2.style.display, equals('none'));
-    expect(a1c.style.display, equals('none'));
-    expect(a2b2.style.display, equals('none'));
-    expect(a2b3.style.display, equals('none'));
-    expect(a2b4.style.display, equals('none'));
-    expect(a2c.style.display, equals('')); // fix?
+    expectHidden(a1);
+    expectVisible(a2);
+    expectHidden(a3);
+    expectHidden(a1b1);
+    expectHidden(a1b2);
+    expectHidden(a1c);
+    expectHidden(a2b2);
+    expectHidden(a2b3);
+    expectHidden(a2b4);
+    expectVisible(a2c);
 
     router.route('a2/b4');
 
-    expect(a1.style.display, equals('none'));
-    expect(a2.style.display, equals(''));
-    expect(a1b1.style.display, equals('none'));
-    expect(a1b2.style.display, equals('none'));
-    expect(a1c.style.display, equals('')); // fix?
-    expect(a2b2.style.display, equals('none'));
-    expect(a2b3.style.display, equals('none'));
-    expect(a2b4.style.display, equals(''));
-    expect(a2c.style.display, equals('none'));
+    expectHidden(a1);
+    expectVisible(a2);
+    expectHidden(a3);
+    expectHidden(a1b1);
+    expectHidden(a1b2);
+    expectHidden(a1c);
+    expectHidden(a2b2);
+    expectHidden(a2b3);
+    expectVisible(a2b4);
+    expectHidden(a2c);
 
-    // The following ones are odd!!!!!!!!!
     router.route('garbage/b4');
 
-    expect(a1.style.display, equals('none'));
-    expect(a2.style.display, equals('none'));
-    expect(a1b1.style.display, equals('none'));
-    expect(a1b2.style.display, equals('none'));
-    expect(a1c.style.display, equals('')); // fix?
-    expect(a2b2.style.display, equals('none'));
-    expect(a2b3.style.display, equals('none'));
-    expect(a2b4.style.display, equals(''));
-    expect(a2c.style.display, equals('none'));
+    expectHidden(a1);
+    expectHidden(a2);
+    expectVisible(a3);
+    expectHidden(a1b1);
+    expectHidden(a1b2);
+    expectHidden(a1c);
+    expectHidden(a2b2);
+    expectHidden(a2b3);
+    expectHidden(a2b4);
+    expectHidden(a2c);
     
     router.route('a1/b4');
 
-    expect(a1.style.display, equals(''));
-    expect(a2.style.display, equals('none'));
-    expect(a1b1.style.display, equals('none'));
-    expect(a1b2.style.display, equals('none'));
-    expect(a1c.style.display, equals('')); // fix?
-    expect(a2b2.style.display, equals('none'));
-    expect(a2b3.style.display, equals('none'));
-    expect(a2b4.style.display, equals(''));
-    expect(a2c.style.display, equals('none'));
+    expectVisible(a1);
+    expectHidden(a2);
+    expectHidden(a1b1);
+    expectHidden(a1b2);
+    expectVisible(a1c);
+    expectHidden(a2b2);
+    expectHidden(a2b3);
+    expectHidden(a2b4);
+    expectHidden(a2c);
   });
+}
+
+void expectVisible(Element e) {
+  expect(e.style.display, equals(''));
+}
+
+void expectHidden(Element e) {
+  expect(e.style.display, equals('none'));
 }
 
 Element findElementById(Element root, String id) {
@@ -150,6 +164,10 @@ Element findElement(Element e, Function check) {
 Element div([Map attributes, List children]) {
   Element e = new MockElement();
   e.attributes = attributes != null ? attributes : {};
-  e.children = children != null ? children : [];
+  if (children != null) {
+    children.forEach((c){
+      e.children.add(c);
+    });
+  }
   return e;
 }

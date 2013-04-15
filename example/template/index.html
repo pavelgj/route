@@ -10,6 +10,7 @@
   <body>   
     <h1>routable template example</h1>
 
+    <a href="#">/</a>
     <a href="#a">/a</a>
     <a href="#a/b1">/a/b1</a>
     <a href="#a/b2">/a/b2</a>
@@ -44,7 +45,13 @@
                </div>
             </div>
           </div>
+          <div default-route="b-default">
+            <h1>default route for b</h1>
+          </div>
         </div>
+      </div>
+      <div default-route="a-default">
+        <h1>default route for a</h1>
       </div>
     </div>
 

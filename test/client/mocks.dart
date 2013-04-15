@@ -20,9 +20,31 @@ class MockHistory extends Mock implements History {}
 class MockLocation extends Mock implements Location {}
 
 class MockElement extends Mock implements Element {
+  Element parent;
   Map<String, String> attributes = {};
-  List<Element> children = [];
+  List<Element> children;
   MockStyle style = new MockStyle();
+  MockElement() {
+    children = new MockChildren(this);
+  }
+}
+
+class MockChildren implements List<Element> {
+  Element parent;
+  List<Element> list = [];
+  MockChildren(this.parent);
+  void add(Element e) {
+    e.parent = parent;
+    list.add(e);
+  }
+  
+  void forEach(f) {
+    list.forEach(f);
+  }
+  
+  Iterator get iterator {
+    return list.iterator;
+  }
 }
 
 class MockStyle {

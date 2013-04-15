@@ -34,7 +34,7 @@ class RouteEvent {
  */
 class Router {
   final Map<UrlPattern, Handler> _handlers;
-  final List<Router> _childRouters;
+  final List<Tuple<Router, Routable>> _childRouters;
   final Router _parentRouter;
   final bool useFragment;
   final Routable host;
@@ -53,7 +53,7 @@ class Router {
    * [History.supportsState].
    */
   Router({Router parentRouter, Routable host, bool useFragment, dynamic win})
-      : _childRouters = <Router>[],
+      : _childRouters = <Tuple<Router, Routable>>[],
         _handlers = new Map<UrlPattern, Handler>(),
         _parentRouter = parentRouter,
         host = (host == null) ? new PropagatingRoutable() : host,
@@ -77,7 +77,7 @@ class Router {
   void addRoutable(Routable routable) {
     Router childRouter = new Router(parentRouter: this, host: routable,
         useFragment: useFragment, win: win);
-    _childRouters.add(childRouter);
+    _childRouters.add(new Tuple(childRouter, routable));
   }
 
   /**
@@ -111,12 +111,14 @@ class Router {
   }
   
   /**
-   * Propagates the given path to all child routables.
+   * Propagates the given path to child routables.
    */
-  void propagate(String path) {
+  void propagate(String path, {List<Routable> routables}) {
     _logger.finest('propagate $path');
-    _childRouters.forEach((r) {
-      r.route(path);
+    _childRouters.forEach((Tuple<Router, Routable> r) {
+      if (routables == null || routables.contains(r.second)) {
+        r.first.route(path);
+      }
     });
   }
 
@@ -197,6 +199,12 @@ class Router {
       });
     }
   }
+}
+
+class Tuple<T1, T2> {
+  final T1 first;
+  final T2 second;
+  Tuple(this.first, this.second);
 }
 
 /**
